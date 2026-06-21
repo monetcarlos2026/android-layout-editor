@@ -1,271 +1,236 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LayoutEditor - Android XML 布局可视化编辑器</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #0a0e17; --bg-elevated: #111827; --bg-card: #1a2234;
-      --border: rgba(255,255,255,0.06); --text: #e2e8f0; --text-muted: #64748b; --text-dim: #475569;
-      --accent: #3ddc84; --accent-dim: rgba(61,220,132,0.1); --accent-glow: rgba(61,220,132,0.15);
-      --blue: #60a5fa; --amber: #fbbf24; --red: #f87171; --radius: 12px;
-      --font: 'Inter', -apple-system, sans-serif; --mono: 'JetBrains Mono', monospace;
-    }
-    html { scroll-behavior: smooth; }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-    body::before { content:''; position:fixed; inset:0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events:none; z-index:0; }
-    nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:0 48px; height:64px; display:flex; align-items:center; justify-content:space-between; background:rgba(10,14,23,0.8); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
-    .nav-brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text); }
-    .nav-logo { width:32px; height:32px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:#0a0e17; }
-    .nav-title { font-weight:700; font-size:16px; letter-spacing:-0.02em; }
-    .nav-links { display:flex; gap:32px; list-style:none; }
-    .nav-links a { color:var(--text-muted); text-decoration:none; font-size:14px; font-weight:500; transition:color 0.2s; }
-    .nav-links a:hover { color:var(--text); }
-    .hero { position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:120px 24px 80px; }
-    .hero-glow { position:absolute; top:-200px; left:50%; transform:translateX(-50%); width:800px; height:600px; background:radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%); pointer-events:none; opacity:0.6; }
-    .hero-icon { position:relative; width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #2bb86e); border-radius:20px; display:flex; align-items:center; justify-content:center; margin-bottom:32px; box-shadow:0 20px 60px rgba(61,220,132,0.2); animation:float 6s ease-in-out infinite; }
-    .hero-icon svg { width:40px; height:40px; color:#0a0e17; }
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-    .hero h1 { position:relative; font-size:clamp(40px,6vw,72px); font-weight:800; letter-spacing:-0.04em; line-height:1.1; margin-bottom:16px; }
-    .hero h1 .accent { color:var(--accent); }
-    .hero-sub { position:relative; font-size:clamp(16px,2vw,20px); color:var(--text-muted); max-width:560px; margin-bottom:40px; }
-    .hero-actions { position:relative; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
-    .btn { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:10px; font-size:15px; font-weight:600; text-decoration:none; transition:all 0.25s; cursor:pointer; border:none; font-family:var(--font); }
-    .btn-primary { background:var(--accent); color:#0a0e17; box-shadow:0 4px 20px rgba(61,220,132,0.25); }
-    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(61,220,132,0.35); }
-    .btn-secondary { background:var(--bg-card); color:var(--text); border:1px solid var(--border); }
-    .btn-secondary:hover { background:var(--bg-elevated); transform:translateY(-2px); }
-    .hero-stats { position:relative; display:flex; gap:48px; margin-top:64px; padding-top:40px; border-top:1px solid var(--border); }
-    .stat { text-align:center; }
-    .stat-value { font-size:28px; font-weight:700; }
-    .stat-value .accent { color:var(--accent); }
-    .stat-label { font-size:13px; color:var(--text-muted); margin-top:4px; }
-    .features { position:relative; z-index:1; padding:80px 48px; max-width:1100px; margin:0 auto; }
-    .section-label { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin-bottom:12px; }
-    .section-title { font-size:clamp(28px,4vw,40px); font-weight:700; letter-spacing:-0.03em; margin-bottom:48px; }
-    .feature-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
-    .feature { padding:28px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); transition:all 0.3s; }
-    .feature:hover { border-color:rgba(255,255,255,0.1); transform:translateY(-2px); }
-    .feature-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:20px; }
-    .feature-icon.green { background:var(--accent-dim); }
-    .feature-icon.blue { background:rgba(96,165,250,0.1); }
-    .feature-icon.amber { background:rgba(251,191,36,0.1); }
-    .feature h3 { font-size:16px; font-weight:600; margin-bottom:8px; }
-    .feature p { font-size:14px; color:var(--text-muted); }
-    .versions { position:relative; z-index:1; padding:80px 48px 120px; max-width:900px; margin:0 auto; }
-    .timeline { position:relative; padding-left:32px; }
-    .timeline::before { content:''; position:absolute; left:7px; top:8px; bottom:8px; width:2px; background:linear-gradient(to bottom, var(--accent), var(--border)); border-radius:1px; }
-    .version-item { position:relative; padding:24px 28px; margin-bottom:16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); transition:all 0.3s; opacity:0; transform:translateY(20px); }
-    .version-item.visible { opacity:1; transform:translateY(0); }
-    .version-item:hover { border-color:rgba(255,255,255,0.1); transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,0.3); }
-    .version-item::before { content:''; position:absolute; left:-29px; top:32px; width:12px; height:12px; border-radius:50%; background:var(--bg); border:2px solid var(--accent); z-index:1; }
-    .version-item.latest::before { background:var(--accent); box-shadow:0 0 12px rgba(61,220,132,0.4); }
-    .version-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
-    .version-tag { font-family:var(--mono); font-size:15px; font-weight:600; color:var(--accent); }
-    .version-date { font-size:13px; color:var(--text-dim); }
-    .version-latest-badge { display:inline-block; padding:2px 10px; background:var(--accent-dim); color:var(--accent); font-size:11px; font-weight:600; border-radius:100px; }
-    .version-changes { list-style:none; display:flex; flex-direction:column; gap:6px; }
-    .version-changes li { font-size:14px; color:var(--text-muted); padding-left:16px; position:relative; }
-    .version-changes li::before { content:'›'; position:absolute; left:0; color:var(--text-dim); font-weight:600; }
-    .version-changes li.fix::before { color:var(--red); }
-    .version-changes li.new::before { color:var(--accent); }
-    .version-changes li.refactor::before { color:var(--blue); }
-    .version-links { display:flex; gap:12px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
-    .version-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--text-muted); text-decoration:none; padding:6px 14px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--border); transition:all 0.2s; }
-    .version-link:hover { color:var(--text); background:rgba(255,255,255,0.06); }
-    .version-link.primary { background:var(--accent-dim); border-color:rgba(61,220,132,0.2); color:var(--accent); }
-    .version-link.primary:hover { background:rgba(61,220,132,0.15); }
-    footer { position:relative; z-index:1; text-align:center; padding:40px 24px; border-top:1px solid var(--border); color:var(--text-dim); font-size:13px; }
-    @media(max-width:768px) {
-      nav{padding:0 20px;} .nav-links{display:none;} .hero{padding:100px 20px 60px;}
-      .hero-stats{gap:24px;flex-wrap:wrap;justify-content:center;} .features,.versions{padding:60px 20px;}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Android XML 布局可视化编辑器 v2.8.6</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav>
-    <a href="#" class="nav-brand"><div class="nav-logo">LE</div><span class="nav-title">LayoutEditor</span></a>
-    <ul class="nav-links"><li><a href="#features">功能</a></li><li><a href="#versions">版本</a></li></ul>
-  </nav>
-  <section class="hero">
-    <div class="hero-glow"></div>
-    <div class="hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
-    <h1>Layout<span class="accent">Editor</span></h1>
-    <p class="hero-sub">Android XML 布局可视化编辑器 — 拖拽设计、实时预览、代码同步，零依赖纯前端运行</p>
-    <div class="hero-actions">
-      <a href="v2.8.6/" class="btn btn-primary" target="_blank">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        在线使用 v2.8.6
-      </a>
-      <a href="#versions" class="btn btn-secondary">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        历史版本预览
-      </a>
+
+<!-- 顶部工具栏 -->
+<div class="toolbar" id="mainToolbar">
+  <div class="toolbar-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+    LayoutEditor <span style="font-size:10px;color:var(--text-muted);font-weight:400;margin-left:4px;">v2.8.6</span>
+  </div>
+  <div class="toolbar-divider"></div>
+  <button class="toolbar-btn" onclick="openFile()" title="打开文件">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    打开
+  </button>
+  <div class="toolbar-divider"></div>
+  <button class="toolbar-btn" onclick="undo()" title="撤销">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    撤销
+  </button>
+  <button class="toolbar-btn" onclick="redo()" title="重做">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg>
+    重做
+  </button>
+  <button class="toolbar-btn" onclick="clearAll()" title="清空画布">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    清空
+  </button>
+  <div class="toolbar-spacer"></div>
+  <button class="toolbar-btn" onclick="exportXML()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    导出XML
+  </button>
+  <button class="toolbar-btn" onclick="runActivity()" title="运行Activity（生成Android项目）">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    运行Activity
+  </button>
+  <div class="toolbar-divider" id="fullscreenDivider"></div>
+  <button class="toolbar-btn" id="fullscreenBtn" onclick="toggleBrowserFullscreen()" title="浏览器全屏">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+    全屏
+  </button>
+</div>
+
+<!-- 主体 -->
+<div class="main-container">
+  <!-- 左侧组件面板 -->
+  <div class="panel-left" id="panelLeft">
+    <!-- 组件树 -->
+    <div class="panel-section tree-section" id="treeSection">
+      <div class="panel-header" onclick="toggleSection('treeSection')">
+        <span>组件树</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="tree-container" id="componentTree"></div>
     </div>
-    <div class="hero-stats">
-      <div class="stat"><div class="stat-value">24<span class="accent">+</span></div><div class="stat-label">Android 组件</div></div>
-      <div class="stat"><div class="stat-value">0</div><div class="stat-label">外部依赖</div></div>
-      <div class="stat"><div class="stat-value">14<span class="accent">+</span></div><div class="stat-label">版本迭代</div></div>
+    <!-- 组件库 -->
+    <div class="panel-section" id="componentSection">
+      <div class="panel-header" style="border-top: 1px solid var(--border);" onclick="toggleSection('componentSection')">
+        <span>组件库</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="panel-search">
+        <input type="text" placeholder="搜索组件..." id="componentSearch" oninput="filterComponents(this.value)" />
+      </div>
+      <div class="component-list" id="componentList"></div>
     </div>
-  </section>
-  <section class="features" id="features">
-    <div class="section-label">核心功能</div>
-    <div class="section-title">设计驱动的布局编辑体验</div>
-    <div class="feature-grid">
-      <div class="feature"><div class="feature-icon green">🎨</div><h3>可视化拖拽设计</h3><p>24+ Android 组件支持拖拽放置，实时预览效果，所见即所得</p></div>
-      <div class="feature"><div class="feature-icon blue">📝</div><h3>XML 语法高亮编辑</h3><p>内置代码编辑器，XML 语法高亮、行号显示，设计/代码实时双向同步</p></div>
-      <div class="feature"><div class="feature-icon amber">📦</div><h3>零依赖纯前端</h3><p>无需后端服务，无需安装，打开浏览器即可使用，支持离线运行</p></div>
-    </div>
-  </section>
-  <section class="versions" id="versions">
-    <div class="section-label">版本历史</div>
-    <div class="section-title">持续进化</div>
-    <div class="timeline">
-      <div class="version-item latest">
-        <div class="version-header"><div style="display:flex;align-items:center;gap:10px;"><span class="version-tag">v2.13.0</span><span class="version-latest-badge">NEW</span></div><span class="version-date">2026-06-04</span></div>
-        <ul class="version-changes">
-          <li class="new">XML 格式化与重构（Shift+Alt+F 格式化、提取到 @string/@dimen、包裹/解开布局）</li>
-          <li class="new">性能分析面板（布局深度、视图统计、Measure 估算、Overdraw 检测）</li>
-          <li class="new">资源管理增强（@drawable/@layout/@string/@dimen 自动补全、悬停预览）</li>
-          <li class="new">布局健康评分、统计面板、Overdraw 热力图覆盖层</li>
-        </ul>
-        <div class="version-links"><a href="v2.13.0/CHANGELOG.md" class="version-link primary" target="_blank">更新日志</a><a href="https://github.com/cheng-X01/android-layout-editor" class="version-link" target="_blank">源码</a></div>
+  </div>
+
+  <!-- 中间编辑区 -->
+  <div class="panel-center">
+    <div class="center-tabs" id="centerTabs">
+      <div class="tab-panel-toggle" onclick="togglePanel('left')" title="折叠/展开左侧面板">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
       </div>
-      <div class="version-item">
-        <div class="version-header"><div style="display:flex;align-items:center;gap:10px;"><span class="version-tag">v2.12.0</span></div><span class="version-date">2026-06-04</span></div>
-        <ul class="version-changes">
-          <li class="new">Lint 验证（9 条规则：嵌套、根布局、weight、硬编码、RTL、ScrollView+RecyclerView 等）</li>
-          <li class="new">多文件导航（DefinitionProvider、DocumentLinkProvider、CodeLensProvider）</li>
-          <li class="new">Material 3 主题增强（种子色动态调色板生成）</li>
-          <li class="new">响应式多屏预览（2x2 设备网格同步渲染）</li>
-        </ul>
-        <div class="version-links"><a href="v2.12.0/CHANGELOG.md" class="version-link" target="_blank">更新日志</a></div>
+      <div class="tab-spacer"></div>
+      <div class="center-tab active" data-tab="design" onclick="switchTab('design')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        设计
       </div>
-      <div class="version-item">
-        <div class="version-header"><div style="display:flex;align-items:center;gap:10px;"><span class="version-tag">v2.11.0</span></div><span class="version-date">2026-06-04</span></div>
-        <ul class="version-changes">
-          <li class="new">代码片段与模板（8 个常用布局模板）</li>
-          <li class="new">导出为图片（SVG foreignObject + Canvas）</li>
-          <li class="new">无障碍检查（contentDescription、触摸目标、hint/labelFor、liveRegion）</li>
-        </ul>
-        <div class="version-links"><a href="v2.11.0/CHANGELOG.md" class="version-link" target="_blank">更新日志</a></div>
+      <div class="center-tab" data-tab="code" onclick="switchTab('code')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        代码
       </div>
-      <div class="version-item">
-        <div class="version-header"><div style="display:flex;align-items:center;gap:10px;"><span class="version-tag">v2.10.0</span></div><span class="version-date">2026-06-04</span></div>
-        <ul class="version-changes">
-          <li class="new">Custom Editor API（WorkspaceEdit 原生撤销/重做）</li>
-          <li class="new">XML 验证与属性自动补全</li>
-          <li class="new">资源拖放（图片/布局文件直接拖入编辑器）</li>
-          <li class="new">布局边界可视化、Layout Inspector</li>
-        </ul>
-        <div class="version-links"><a href="v2.10.0/CHANGELOG.md" class="version-link" target="_blank">更新日志</a></div>
+      <div class="center-tab" data-tab="split" onclick="switchTab('split')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+        分屏
       </div>
-      <div class="version-item">
-        <div class="version-header"><div style="display:flex;align-items:center;gap:10px;"><span class="version-tag">v2.9.0</span></div><span class="version-date">2026-06-04</span></div>
-        <ul class="version-changes">
-          <li class="new">VS Code 插件版本发布</li>
-          <li class="new">支持 Custom Editor API，双击 XML 打开可视化编辑器</li>
-          <li class="new">右键菜单和命令面板集成</li>
-          <li class="new">自动跟随 VS Code 主题</li>
-        </ul>
-        <div class="version-links"><a href="v2.9.0/DEPLOY.md" class="version-link primary" target="_blank">安装说明</a><a href="https://github.com/cheng-X01/android-layout-editor" class="version-link" target="_blank">源码</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><div style="display:flex;align-items:center;gap:10px;"><span class="version-tag">v2.8.6</span></div><span class="version-date">2026-05-18</span></div>
-        <ul class="version-changes">
-          <li class="new">浮动工具条 fixed 定位，动态跟随设计窗</li>
-          <li class="new">网格数字与网格线精确对齐</li>
-          <li class="new">缩放比例支持自定义输入</li>
-          <li class="new">组件 ID 可编辑、类型可切换</li>
-          <li class="fix">修复手机内容滚动条</li>
-        </ul>
-        <div class="version-links"><a href="v2.8.6/" class="version-link primary" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.8.5</span><span class="version-date">2026-05-18</span></div>
-        <ul class="version-changes">
-          <li class="new">标尺开关、按钮高亮、代码高亮扩充</li>
-        </ul>
-        <div class="version-links"><a href="v2.8.5/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.8.4</span><span class="version-date">2026-05-18</span></div>
-        <ul class="version-changes">
-          <li class="new">设计窗全屏保留代码分栏</li>
-        </ul>
-        <div class="version-links"><a href="v2.8.4/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.8.3</span><span class="version-date">2026-05-18</span></div>
-        <ul class="version-changes">
-          <li class="new">双全屏模式、网格数值、fixed 工具条</li>
-        </ul>
-        <div class="version-links"><a href="v2.8.3/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.8.0</span><span class="version-date">2026-05-17</span></div>
-        <ul class="version-changes">
-          <li class="refactor">代码重构：DOM 缓存、函数拆分、零依赖</li>
-        </ul>
-        <div class="version-links"><a href="v2.8.0/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.7.5</span><span class="version-date">2026-05-17</span></div>
-        <ul class="version-changes">
-          <li class="new">代码编辑器 XML 语法高亮</li>
-        </ul>
-        <div class="version-links"><a href="v2.7.5/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.7.2</span><span class="version-date">2026-05-17</span></div>
-        <ul class="version-changes">
-          <li class="new">设计画布四边标尺</li>
-        </ul>
-        <div class="version-links"><a href="v2.7.2/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.7.1</span><span class="version-date">单文件版</span></div>
-        <ul class="version-changes">
-          <li class="new">单文件 HTML，基础功能完善</li>
-        </ul>
-        <div class="version-links"><a href="v2.7.1/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.5</span><span class="version-date">单文件版</span></div>
-        <ul class="version-changes">
-          <li class="new">组件库扩展，属性编辑优化</li>
-        </ul>
-        <div class="version-links"><a href="v2.5/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v2.0</span><span class="version-date">单文件版</span></div>
-        <ul class="version-changes">
-          <li class="new">代码编辑器、XML 导入导出</li>
-        </ul>
-        <div class="version-links"><a href="v2.0/" class="version-link" target="_blank">在线预览</a></div>
-      </div>
-      <div class="version-item">
-        <div class="version-header"><span class="version-tag">v1.0</span><span class="version-date">初始版本</span></div>
-        <ul class="version-changes">
-          <li class="new">首个版本，基础拖拽布局编辑</li>
-        </ul>
-        <div class="version-links"><a href="v1.0/" class="version-link" target="_blank">在线预览</a></div>
+      <div class="tab-spacer"></div>
+      <div class="tab-panel-toggle" onclick="togglePanel('right')" title="折叠/展开右侧面板">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
       </div>
     </div>
-  </section>
-  <footer><p>LayoutEditor &copy; 2026 &middot; Android XML 布局可视化编辑器 &middot; 纯前端 &middot; 零依赖</p></footer>
-  <script>
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.version-item').forEach((item, i) => {
-      item.style.transitionDelay = `${i * 0.08}s`;
-      item.style.transition = `opacity 0.5s ease ${i * 0.08}s, transform 0.5s ease ${i * 0.08}s`;
-      observer.observe(item);
-    });
-  </script>
+
+    <div style="flex:1; display:flex; overflow:hidden; position:relative;">
+      <!-- 画布 -->
+      <div class="canvas-container" id="canvasContainer">
+        <!-- 网格数值 -->
+        <canvas id="gridCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;"></canvas>
+        <!-- 画布浮动工具栏 -->
+        <div class="canvas-toolbar" id="canvasToolbar">
+          <button class="toolbar-btn" id="btnRuler" onclick="toggleRuler()" title="显示/隐藏标尺">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
+          </button>
+          <div class="canvas-toolbar-sep"></div>
+          <button class="toolbar-btn" id="btnDelete" onclick="deleteSelected()" title="删除选中">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+          <button class="toolbar-btn" id="btnDuplicate" onclick="duplicateSelected()" title="复制组件">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button class="toolbar-btn" id="btnMoveUp" onclick="moveUp()" title="上移">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button class="toolbar-btn" id="btnMoveDown" onclick="moveDown()" title="下移">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="canvas-toolbar-sep"></div>
+          <input type="text" class="ratio-input" id="zoomInput" list="zoomList" value="100%" onblur="setZoomFromInput(this.value)" onkeydown="if(event.key==='Enter'){setZoomFromInput(this.value);this.blur()}" title="缩放比例（可输入自定义值）" style="width:52px;">
+          <datalist id="zoomList">
+            <option value="50%">
+            <option value="75%">
+            <option value="100%">
+            <option value="125%">
+            <option value="150%">
+            <option value="200%">
+          </datalist>
+          <button class="toolbar-btn" onclick="fitToView()" title="自适应">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+          <div class="canvas-toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="toggleOrientation()" title="切换横竖屏">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+          </button>
+          <select class="ratio-select" id="ratioSelect" onchange="setPhoneRatio(this.value)" title="切换手机比例">
+            <option value="9-16">9:16</option>
+            <option value="3-4">3:4</option>
+            <option value="1-2">1:2</option>
+          </select>
+          <div class="canvas-toolbar-sep"></div>
+          <button class="toolbar-btn" id="designFullscreenBtn" onclick="toggleDesignFullscreen()" title="设计窗口全屏">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+        </div>
+        <div class="phone-frame" id="phoneFrame">
+          <div class="frame-coords" id="frameCoords">x: 0, y: 0</div>
+          <div class="phone-status-bar">
+            <span>9:41</span>
+            <div class="phone-notch"></div>
+            <span>📶 🔋</span>
+          </div>
+          <div class="phone-content" id="phoneContent"></div>
+        </div>
+      </div>
+
+      <!-- 代码编辑器 -->
+      <div class="code-container" id="codeContainer">
+        <div class="code-editor-wrapper">
+          <div class="line-numbers" id="lineNumbers"></div>
+          <div class="code-input-area">
+            <pre class="code-highlight" id="codeHighlight"></pre>
+            <textarea class="code-editor" id="codeEditor" spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧属性面板 -->
+  <div class="panel-right" id="panelRight">
+    <div class="panel-section" id="propsSection">
+      <div class="panel-header" onclick="toggleSection('propsSection')">
+        <span>属性</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="props-empty" id="propsEmpty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15a1.65 1.65 0 0 0 1.51 1z"/></svg>
+      <span>选择组件以编辑属性</span>
+    </div>
+    <div class="props-content" id="propsContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 底部状态栏 -->
+<div class="statusbar" id="statusBar">
+  <div class="dot"></div>
+  <span id="statusText">就绪</span>
+  <span id="statusInfo">组件: 0</span>
+  <span class="status-sep">|</span>
+  <span id="statusZoom">缩放: 100%</span>
+  <span class="status-sep">|</span>
+  <span id="statusSelected">未选中</span>
+  <span class="status-sep">|</span>
+  <span id="statusView">设计视图</span>
+  <span style="flex:1"></span>
+  <span>Android XML Layout Editor v2.8.6</span>
+</div>
+
+<!-- Toast容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- 右键菜单（保留带SVG图标的版本） -->
+<div class="context-menu" id="contextMenu">
+  <div class="context-menu-item" onclick="ctxAction('copy')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    复制组件
+  </div>
+  <div class="context-menu-item" onclick="ctxAction('up')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+    上移
+  </div>
+  <div class="context-menu-item" onclick="ctxAction('down')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    下移
+  </div>
+  <div class="context-menu-sep"></div>
+  <div class="context-menu-item danger" onclick="ctxAction('delete')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    删除
+  </div>
+</div>
+
+<!-- 文件输入 -->
+<input type="file" id="fileInput" accept=".xml" onchange="handleFileSelect(event)" />
+<div class="pinch-indicator" id="pinchIndicator">100%</div>
+
+<script src="app.js"></script>
 </body>
 </html>
