@@ -23,4 +23,4 @@ Android XML 布局可视化编辑器 — 拖拽设计、实时预览、代码同
 
 ## License
 
-MIT License。改编自 [cheng-X01/android-layout-editor](https://github.com/cheng-X01/android-layout-editor)。
+MIT License。
