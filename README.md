@@ -4,7 +4,7 @@ Android XML 布局可视化编辑器 — 拖拽设计、实时预览、代码同
 
 ## 在线使用
 
-**[点击打开编辑器](https://monetcarlos2026.github.io/android-layout-editor/)**
+**[点击打开编辑器](https://monetcarlos2026.github.io/Android-Layout-Editor/)**
 
 ## 功能特性
 
